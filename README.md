@@ -3,13 +3,13 @@
 ## Game similar to snake game with BFS, DFS, and three versions of A* based AI.
 
 
-<img src="/Images/Game Play.png">
+<img src="/Images/Game Play.PNG">
 
 ##Game
 
 
 
-<img src="/Images/Start Menu.png">
+<img src="/Images/Start Menu.PNG">
 
 ##Start Menu
 
