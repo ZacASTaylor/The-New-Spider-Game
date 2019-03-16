@@ -5,13 +5,13 @@
 
 <img src="/Images/Game Play.PNG">
 
-##Game
+## Game
 
 
 
 <img src="/Images/Start Menu.PNG">
 
-##Start Menu
+## Start Menu
 
 
 ## Please email me for the source code: zacharystroudtaylor AT cmail DOT carleton DOT ca
