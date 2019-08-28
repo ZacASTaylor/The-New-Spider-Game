@@ -15,6 +15,7 @@ from random import randint, choice
 from heapq import heappush, heappop
 
 
+# Board object used by entities to determine their coordinates and where to draw
 class Board(object):
     def __init__(self, window, gridSqrPxs, dim, pad):
         self.window = window
@@ -22,12 +23,16 @@ class Board(object):
         self.dim = dim
         self.pad = pad
 
+
+# ~Abstract entity class 
 class Entity(object):
     def __init__(self, board):
         self.gridCoords = None
         self.drawCoords = None
         self.sprite = None
         self.board = board
+    
+    # Private methods for all concrete entites to use
     
     def _randSquare(self):
         x = randint(1, self.board.dim)
@@ -40,27 +45,7 @@ class Entity(object):
         return [ (x-1) * self.board.gridSqrPxs + self.board.pad, 
                  (y-1) * self.board.gridSqrPxs + self.board.pad, 
                  x     * self.board.gridSqrPxs + self.board.pad, 
-                 y     * self.board.gridSqrPxs + self.board.pad ]
-    
-    def move(self, newGridCoords):
-        while(True):
-            if newGridCoords == self.gridCoords:
-                break
-            if newGridCoords[0] > self.gridCoords[0]:
-                self._right()
-            if newGridCoords[0] < self.gridCoords[0]:
-                self._left()
-            if newGridCoords[1] > self.gridCoords[1]:
-                self._down()
-            if newGridCoords[1] < self.gridCoords[1]:
-                self._up()
-                
-    def draw(self):
-        self.board.window.delete(self.sprite)
-        self.sprite = self.board.window.create_rectangle(self.drawCoords, fill=self.color)
-        
-    def delete(self):
-        self.board.window.delete(self.sprite)        
+                 y     * self.board.gridSqrPxs + self.board.pad ]      
         
     def _left(self, event=None):
         self.drawCoords[0] -= self.board.gridSqrPxs
@@ -81,8 +66,28 @@ class Entity(object):
         self.drawCoords[1] += self.board.gridSqrPxs
         self.drawCoords[3] += self.board.gridSqrPxs
         self.gridCoords = (self.gridCoords[0], self.gridCoords[1]+1)
+        
+    def move(self, newGridCoords):
+        while(True):
+            if newGridCoords == self.gridCoords:
+                break
+            if newGridCoords[0] > self.gridCoords[0]:
+                self._right()
+            if newGridCoords[0] < self.gridCoords[0]:
+                self._left()
+            if newGridCoords[1] > self.gridCoords[1]:
+                self._down()
+            if newGridCoords[1] < self.gridCoords[1]:
+                self._up()
+                
+    def draw(self):
+        self.board.window.delete(self.sprite)
+        self.sprite = self.board.window.create_rectangle(self.drawCoords, fill=self.color)
+        
+    def delete(self):
+        self.board.window.delete(self.sprite)  
 
-       
+# Human controlled entity, used for testing before, not used anymore
 class HCEntity(Entity):   
     def __init__(self, board, color="blue"):
         super(HCEntity, self).__init__(board)
@@ -93,6 +98,7 @@ class HCEntity(Entity):
         self.sprite = self.board.window.create_rectangle(self.drawCoords, fill=self.color)
 
 
+# Random moving target entity for spider 
 class Ant(Entity):
     def __init__(self, board, speed, color="black"):
         super(Ant, self).__init__(board)
@@ -138,12 +144,14 @@ class Ant(Entity):
         coords[3] -= 6
         return coords
     
+    # Overridden from abstract entity 
     def move(self):       
         newX = self.gridCoords[0] + self.direction[0]
         newY = self.gridCoords[1] + self.direction[1]
         super(Ant, self).move((newX, newY))
           
-
+          
+# Search path following seeking entity  
 class Spider(Entity):
     def __init__(self, board, color="blue"):
         super(Spider, self).__init__(board)
@@ -152,12 +160,12 @@ class Spider(Entity):
         self.drawCoords = self._computeDrawCoords()
         self.sprite = self.board.window.create_rectangle(self.drawCoords, fill=self.color)
                      
-        
+# Class to store and manipulate spider data 
 class SpiderNode(object):
     def __init__(self, spiderCoords, antCoords, parent, depth, hValue=None):
         self.spiderCoords = spiderCoords
         self.antCoords = antCoords
-        self.children = []
+        self.children = [] # possible spider locations
         self.parent = parent
         self.depth = depth
         self.hValue = hValue
@@ -200,7 +208,9 @@ class SpiderNode(object):
 
     def __str__(self):
         return str(self.spiderCoords)
-               
+            
+            
+# ~Abstract search class               
 class Search(object):
     def __init__(self, sType, spider, ant, boardDim):
         self.sType = sType
@@ -220,15 +230,14 @@ class Search(object):
             self.path.insert(0, self.curr.spiderCoords)
         self.path = self.path[1:] # Slice to remove coords spider is already on        
      
-    def bothEntitiesOnBoard(self, c):
-        if (c[0] > 0 and c[0] <= self.boardDim):# Ant still on board: Spider x bound
-    
-            if (c[1] > 0 and c[1] <= self.boardDim):# Ant still on board: Spider y bound
-    
-                if((self.antCoords[0] > 0) and (self.antCoords[0] <= self.boardDim)): # Ant still on board: x bound
-    
-                    return ((self.antCoords[1] > 0) and (self.antCoords[1] <= self.boardDim)) # Ant still on board: y bound  
-                
+    def bothEntitiesOnBoard(self, childPosition):
+        if (childPosition[0] > 0 and childPosition[0] <= self.boardDim):# Spider x bound still on board
+            if (childPosition[1] > 0 and childPosition[1] <= self.boardDim):# Spider y bound still on board
+                if((self.antCoords[0] > 0) and (self.antCoords[0] <= self.boardDim)): # Ant x bound still on board
+                    return ((self.antCoords[1] > 0) and (self.antCoords[1] <= self.boardDim)) # Ant y bound still on board
+
+
+# BFS and DFS (toggled with sType) class concrete search class
 class BlindSearch(Search):    
     
     def __init__(self, sType, spider, ant, boardDim):
@@ -240,6 +249,7 @@ class BlindSearch(Search):
     
         self.loop()
         
+    # Search loop    
     def loop(self):
         
         while len(self.toVisit) != 0:
@@ -270,11 +280,13 @@ class BlindSearch(Search):
             print(self.sType + " No path!")              
    
 
+# A* search class concrete search class           
 class AStarSearch(Search):
     
     def __init__(self, sType, spider, ant, boardDim):
         super(AStarSearch, self).__init__(sType, spider, ant, boardDim)
         
+        # Assign heuristic type
         if self.sType == "A*1":
             self.hCalc = self.aS1HCalc        
         elif self.sType == "A*2":
@@ -289,7 +301,8 @@ class AStarSearch(Search):
         self.depth = {first: 0}        
     
         self.loop()
-        
+    
+    # Search loop    
     def loop(self):
         
         while len(self.toVisit) != 0:        
@@ -326,7 +339,7 @@ class AStarSearch(Search):
     def aS2HCalc(self, spiderCoords, antCoords):
         x1, y1 = spiderCoords
         x2, y2 = antCoords
-        return  (1/3) * (abs(x2-x1) + abs(y2-y1)) # Cut in half because some steps can move two values
+        return  (1/3) * (abs(x2-x1) + abs(y2-y1)) # Cut in half because some steps can move two values (so as to always underestimate)
         
     
     def aS3HCalc(self, spiderCoords, antCoords):
@@ -335,6 +348,7 @@ class AStarSearch(Search):
         return (0.5 * (hOne + hTwo))
     
     
+# Game controller class
 class SpiderGame():  
 
     def startMenu(self):
@@ -355,7 +369,6 @@ class SpiderGame():
         self.dimEntry = Entry(self.master, width=3, justify='center', font=("time",16))
         self.dimEntry.insert(END, 20)
         self.dimEntry.grid(row=2, column=1, padx=(0,10), pady=(4,0))
-        
         
         Label(self.master, text="Ant Speed: ", font=("time",16)).grid(row=3, sticky=E, pady=(4,0))
         antSpeedChoices = (1, 2, 3)
@@ -435,7 +448,8 @@ class SpiderGame():
         self.spider = Spider(self.board, "black")
         self.ant = Ant(self.board, self.antSpeedEntry, "black")
         self.noPathLabel = None
-        
+    
+    # Game controlling search
     def search(self):
         # Multiple ants and spiders?          
 
@@ -539,8 +553,6 @@ class SpiderGame():
                 self.spider.move(path[0])                
                 self.spider.draw()                
                 self.master.after(500, lambda:self.gameloop(path[1:]))
-                
-
 
     def __init__(self):
         self.master = Tk()
