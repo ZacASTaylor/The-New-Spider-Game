@@ -557,7 +557,7 @@ class SpiderGame():
     def __init__(self):
         self.master = Tk()
         self.master.title("NEW SPIDER")
-        self.master.iconbitmap(r'.\\resources\\spider-icon.ico')
+        self.master.iconbitmap(r'.\resources\spider-icon.ico')
         self.antsEaten = 0
         self.antsLost = 0        
         self.startMenu()
