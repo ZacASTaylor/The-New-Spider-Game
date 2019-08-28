@@ -1,4 +1,6 @@
-# newSpider_v15.py
+# Zachary Stroud-Taylor
+# Carleton University
+
 # Optimized all three searches
 # Faster Ant
 # Removed parent dict from A* searches
@@ -543,7 +545,7 @@ class SpiderGame():
     def __init__(self):
         self.master = Tk()
         self.master.title("NEW SPIDER")
-        self.master.iconbitmap(r'C:\Users\Zacha\OneDrive\School\COMP4106\Assignment 1\spider-icon.ico')
+        self.master.iconbitmap(r'.\\resources\\spider-icon.ico')
         self.antsEaten = 0
         self.antsLost = 0        
         self.startMenu()

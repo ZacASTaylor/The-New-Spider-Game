@@ -5,11 +5,11 @@
 
 
 ## Game
-<img src="/Images/Game Play.PNG">
+<img src="/screenshots/game_play.PNG">
 
 
 ## Start Menu
-<img src="/Images/Start Menu.PNG">
+<img src="/screenshots/start_menu.PNG">
 
 
 
